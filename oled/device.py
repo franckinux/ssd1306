@@ -42,7 +42,7 @@
 # Creating a new canvas is effectively 'carte blanche': If you want to retain
 # an existing canvas, then make a reference like:
 #
-#    c = canvas(oled)
+#    c = canvas(device)
 #    for X in ...:
 #        with c as draw:
 #            draw.rectangle(...)
@@ -117,21 +117,21 @@ class sh1106(device):
         self.pages = self.height / 8
 
         self.command(
-            const.DISPLAYON,
-            const.SETDISPLAYCLOCKDIV, 0x80,
-            const.SETMULTIPLEX,       0x3F,
-            const.SETDISPLAYOFFSET,   0x00,
-            const.SETSTARTLINE | 0,
-            const.CHARGEPUMP,         0x14,
-            const.MEMORYMODE,         0x00,
-            const.SEGREMAP,
-            const.COMSCANDEC,
-            const.SETCOMPINS,         0x12,
-            const.SETCONTRAST,        0xCF,
-            const.SETPRECHARGE,       0xF1,
-            const.SETVCOMDETECT,      0x40,
-            const.DISPLAYALLON_RESUME,
+            const.DISPLAYOOFF,
+            const.MEMORYMODE,
+            const.SETHIGHCOLUMN,      0xB0, 0xC8,
+            const.SETLOWCOLUMN,       0x10, 0x40,
+            const.SETCONTRAST,        0x7F,
+            const.SETSEGMENTREMAP,
             const.NORMALDISPLAY,
+            const.SETMULTIPLEX,       0x3F,
+            const.DISPLAYALLON_RESUME,
+            const.SETDISPLAYOFFSET,   0x00,
+            const.SETDISPLAYCLOCKDIV, 0xF0,
+            const.SETPRECHARGE,       0x22,
+            const.SETCOMPINS,         0x12,
+            const.SETVCOMDETECT,      0x20,
+            const.CHARGEPUMP,         0x14,
             const.DISPLAYON)
 
 
@@ -191,6 +191,7 @@ class const:
     SETLOWCOLUMN = 0x00
     SETMULTIPLEX = 0xA8
     SETPRECHARGE = 0xD9
+    SETSEGMENTREMAP = 0xA1
     SETSTARTLINE = 0x40
     SETVCOMDETECT = 0xDB
     SWITCHCAPVCC = 0x2
