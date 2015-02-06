@@ -5,7 +5,7 @@ I2C on the Raspberry Pi. The particular kit I bought can be acquired for
 a few pounds from eBay: http://www.ebay.co.uk/itm/191279261331. Further 
 technical details for the SSD1306 OLED display can be found in the 
 [datasheet](https://raw.githubusercontent.com/rm-hull/ssd1306/master/doc/tech-spec/SSD1306.pdf) [PDF]. 
-See also [datasheet](https://raw.githubusercontent.com/rm-hull/ssd1306/master/doc/tech-spec/SH1106.pdf) [PDF] for the SH1106 chipset.
+See also the [datasheet](https://raw.githubusercontent.com/rm-hull/ssd1306/sh1106-compat/doc/tech-spec/SH1106.pdf) [PDF] for the SH1106 chipset.
 
 The SSD1306 display is 128x64 pixels, and the board is _tiny_, and will fit neatly
 inside the RPi case (the SH1106 is slightly different, in that it supports 132x64
