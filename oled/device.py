@@ -54,6 +54,9 @@ import smbus
 
 
 class device(object):
+    """
+    Base class for OLED driver classes
+    """
 
     def __init__(self, port=1, address=0x3C, cmd_mode=0x00, data_mode=0x40):
         self.cmd_mode = cmd_mode
@@ -82,9 +85,16 @@ class device(object):
 
 
 class sh1106(device):
+    """
+    A device encapsulates the I2C connection (address/port) to the SH1106
+    OLED display hardware. The init method pumps commands to the display
+    to properly initialize it. Further control commands can then be
+    called to affect the brightness. Direct use of the command() and
+    data() methods are discouraged.
+    """
 
     def __init__(self, port=1, address=0x3C):
-        super(sh1106, self).__init__(port, address, 0x00)
+        super(sh1106, self).__init__(port, address)
         self.width = 132
         self.height = 64
         self.pages = self.height / 8
@@ -117,24 +127,23 @@ class sh1106(device):
 
         pix = image.load()
         page = 0xB0
-        for i in xrange(0, self.pages * 8, 8):
+        for y in xrange(0, self.pages * 8, 8):
+
+            # move to given page, then reset the column address
             self.command(page, 0x00, 0x10)
             page += 1
 
-            x = self.width - 1
             buf = []
             for x in xrange(self.width):
                 buf.append(
-                    pix[(x, i + 0)] & 0x01 |
-                    pix[(x, i + 1)] & 0x02 |
-                    pix[(x, i + 2)] & 0x04 |
-                    pix[(x, i + 3)] & 0x08 |
-                    pix[(x, i + 4)] & 0x10 |
-                    pix[(x, i + 5)] & 0x20 |
-                    pix[(x, i + 6)] & 0x40 |
-                    pix[(x, i + 7)] & 0x80)
-
-                x -= 1
+                    pix[(x, y + 0)] & 0x01 |
+                    pix[(x, y + 1)] & 0x02 |
+                    pix[(x, y + 2)] & 0x04 |
+                    pix[(x, y + 3)] & 0x08 |
+                    pix[(x, y + 4)] & 0x10 |
+                    pix[(x, y + 5)] & 0x20 |
+                    pix[(x, y + 6)] & 0x40 |
+                    pix[(x, y + 7)] & 0x80)
 
             self.data(*buf)
 
@@ -154,11 +163,11 @@ class ssd1306(device):
         self.pages = self.height / 8
 
         self.command(
-            const.DISPLAYON,
+            const.DISPLAYOFF,
             const.SETDISPLAYCLOCKDIV, 0x80,
             const.SETMULTIPLEX,       0x3F,
             const.SETDISPLAYOFFSET,   0x00,
-            const.SETSTARTLINE | 0,
+            const.SETSTARTLINE,
             const.CHARGEPUMP,         0x14,
             const.MEMORYMODE,         0x00,
             const.SEGREMAP,
@@ -184,19 +193,19 @@ class ssd1306(device):
             const.PAGEADDR,   0x00, self.pages-1)  # Page start/end address
 
         pix = image.load()
-        for i in xrange(0, self.pages * 8, 8):
+        for y in xrange(0, self.pages * 8, 8):
             x = self.width-1
             buf = []
             while x >= 0:
                 buf.append(
-                    pix[(x, i + 0)] & 0x01 |
-                    pix[(x, i + 1)] & 0x02 |
-                    pix[(x, i + 2)] & 0x04 |
-                    pix[(x, i + 3)] & 0x08 |
-                    pix[(x, i + 4)] & 0x10 |
-                    pix[(x, i + 5)] & 0x20 |
-                    pix[(x, i + 6)] & 0x40 |
-                    pix[(x, i + 7)] & 0x80)
+                    pix[(x, y + 0)] & 0x01 |
+                    pix[(x, y + 1)] & 0x02 |
+                    pix[(x, y + 2)] & 0x04 |
+                    pix[(x, y + 3)] & 0x08 |
+                    pix[(x, y + 4)] & 0x10 |
+                    pix[(x, y + 5)] & 0x20 |
+                    pix[(x, y + 6)] & 0x40 |
+                    pix[(x, y + 7)] & 0x80)
 
                 x -= 1
 
