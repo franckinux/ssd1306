@@ -117,7 +117,7 @@ class sh1106(device):
         self.pages = self.height / 8
 
         self.command(
-            const.DISPLAYOOFF,
+            const.DISPLAYOFF,
             const.MEMORYMODE,
             const.SETHIGHCOLUMN,      0xB0, 0xC8,
             const.SETLOWCOLUMN,       0x10, 0x40,
