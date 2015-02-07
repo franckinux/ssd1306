@@ -55,7 +55,9 @@ import smbus
 
 class device(object):
 
-    def __init__(self, port=1, address=0x3C):
+    def __init__(self, port=1, address=0x3C, cmd_mode=0x00, data_mode=0x40):
+        self.cmd_mode = cmd_mode
+        self.data_mode = data_mode
         self.bus = smbus.SMBus(port)
         self.addr = address
 
@@ -65,7 +67,7 @@ class device(object):
         device - maximum allowed is 32 bytes in one go.
         """
         assert(len(cmd) <= 32)
-        self.bus.write_i2c_block_data(self.addr, 0x00, list(cmd))
+        self.bus.write_i2c_block_data(self.addr, self.cmd_mode, list(cmd))
 
     def data(self, *data):
         """
@@ -74,44 +76,15 @@ class device(object):
         data is larger than this it is sent in chunks.
         """
         for i in xrange(0, len(data), 32):
-            self.bus.write_i2c_block_data(self.addr, 0x40, list(data[i:i+32]))
-
-    def display(self, image):
-        """
-        Takes a 1-bit image and dumps it to the OLED display.
-        """
-        assert(image.mode == '1')
-        assert(image.size[0] == self.width)
-        assert(image.size[1] == self.height)
-
-        self.command(
-            const.COLUMNADDR, 0x00, self.width-1,  # Column start/end address
-            const.PAGEADDR,   0x00, self.pages-1)  # Page start/end address
-
-        pix = image.load()
-        for page in xrange(0, self.pages * 8, 8):
-            x = self.width-1
-            buf = []
-            while x >= 0:
-                buf.append(
-                    pix[(x, page + 0)] & 0x01 |
-                    pix[(x, page + 1)] & 0x02 |
-                    pix[(x, page + 2)] & 0x04 |
-                    pix[(x, page + 3)] & 0x08 |
-                    pix[(x, page + 4)] & 0x10 |
-                    pix[(x, page + 5)] & 0x20 |
-                    pix[(x, page + 6)] & 0x40 |
-                    pix[(x, page + 7)] & 0x80)
-
-                x -= 1
-
-            self.data(*buf)
+            self.bus.write_i2c_block_data(self.addr,
+                                          self.data_mode,
+                                          list(data[i:i+32]))
 
 
 class sh1106(device):
 
     def __init__(self, port=1, address=0x3C):
-        super(sh1106, self).__init__(port, address)
+        super(sh1106, self).__init__(port, address, 0x80)
         self.width = 132
         self.height = 64
         self.pages = self.height / 8
@@ -133,6 +106,40 @@ class sh1106(device):
             const.SETVCOMDETECT,      0x20,
             const.CHARGEPUMP,         0x14,
             const.DISPLAYON)
+
+    def display(self, image):
+        """
+        Takes a 1-bit image and dumps it to the SH1106 OLED display.
+        """
+        assert(image.mode == '1')
+        assert(image.size[0] == self.width)
+        assert(image.size[1] == self.height)
+
+        pix = image.load()
+        page = 0xB0
+        for i in xrange(0, self.pages * 8, 8):
+            self.command(page)
+            page += 1
+
+            x = self.width - 1
+            buf = []
+            while x >= 0:
+                buf.append(
+                    pix[(x, i + 0)] & 0x01 |
+                    pix[(x, i + 1)] & 0x02 |
+                    pix[(x, i + 2)] & 0x04 |
+                    pix[(x, i + 3)] & 0x08 |
+                    pix[(x, i + 4)] & 0x10 |
+                    pix[(x, i + 5)] & 0x20 |
+                    pix[(x, i + 6)] & 0x40 |
+                    pix[(x, i + 7)] & 0x80)
+
+                x -= 1
+
+            self.data(*buf)
+
+            # Reset column address
+            self.command(0x00, 0x10)
 
 
 class ssd1306(device):
@@ -166,6 +173,37 @@ class ssd1306(device):
             const.DISPLAYALLON_RESUME,
             const.NORMALDISPLAY,
             const.DISPLAYON)
+
+    def display(self, image):
+        """
+        Takes a 1-bit image and dumps it to the SSD1306 OLED display.
+        """
+        assert(image.mode == '1')
+        assert(image.size[0] == self.width)
+        assert(image.size[1] == self.height)
+
+        self.command(
+            const.COLUMNADDR, 0x00, self.width-1,  # Column start/end address
+            const.PAGEADDR,   0x00, self.pages-1)  # Page start/end address
+
+        pix = image.load()
+        for i in xrange(0, self.pages * 8, 8):
+            x = self.width-1
+            buf = []
+            while x >= 0:
+                buf.append(
+                    pix[(x, i + 0)] & 0x01 |
+                    pix[(x, i + 1)] & 0x02 |
+                    pix[(x, i + 2)] & 0x04 |
+                    pix[(x, i + 3)] & 0x08 |
+                    pix[(x, i + 4)] & 0x10 |
+                    pix[(x, i + 5)] & 0x20 |
+                    pix[(x, i + 6)] & 0x40 |
+                    pix[(x, i + 7)] & 0x80)
+
+                x -= 1
+
+            self.data(*buf)
 
 
 class const:
