@@ -84,7 +84,7 @@ class device(object):
 class sh1106(device):
 
     def __init__(self, port=1, address=0x3C):
-        super(sh1106, self).__init__(port, address, 0x80)
+        super(sh1106, self).__init__(port, address, 0x00)
         self.width = 132
         self.height = 64
         self.pages = self.height / 8
@@ -118,12 +118,12 @@ class sh1106(device):
         pix = image.load()
         page = 0xB0
         for i in xrange(0, self.pages * 8, 8):
-            self.command(page)
+            self.command(page, 0x00, 0x10)
             page += 1
 
             x = self.width - 1
             buf = []
-            while x >= 0:
+            for x in xrange(self.width):
                 buf.append(
                     pix[(x, i + 0)] & 0x01 |
                     pix[(x, i + 1)] & 0x02 |
@@ -137,9 +137,6 @@ class sh1106(device):
                 x -= 1
 
             self.data(*buf)
-
-            # Reset column address
-            self.command(0x00, 0x10)
 
 
 class ssd1306(device):
