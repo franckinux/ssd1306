@@ -42,7 +42,7 @@
 # Creating a new canvas is effectively 'carte blanche': If you want to retain
 # an existing canvas, then make a reference like:
 #
-#    c = canvas(oled)
+#    c = canvas(device)
 #    for X in ...:
 #        with c as draw:
 #            draw.rectangle(...)
@@ -60,6 +60,7 @@ class canvas(object):
     flushed onto the device.
     """
     def __init__(self, device):
+        self.draw = None
         self.image = Image.new('1', (device.width, device.height))
         self.device = device
 
